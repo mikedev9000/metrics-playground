@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDB.ConsistencyLevel;
 import org.influxdb.InfluxDB.LogLevel;
@@ -12,6 +14,7 @@ import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -66,7 +69,21 @@ public class InfluxDbWriter {
 		return tags;
 	}
 
-	private final InfluxDB influxDB = InfluxDBFactory.connect("http://192.168.99.100:32771/", "root", "root");
+	@Value("${influxdb.address}")
+	private String address;
+
+	@Value("${influxdb.username}")
+	private String username;
+
+	@Value("${influxdb.password}")
+	private String password;
+
+	private InfluxDB influxDB;
+
+	@PostConstruct
+	public void initialize() {
+		influxDB = InfluxDBFactory.connect(address, username, password);
+	}
 
 	@Scheduled(initialDelay = 1000, fixedDelay = 1000)
 	private void writeData() {
@@ -98,17 +115,20 @@ public class InfluxDbWriter {
 
 					// meter fields
 					.addField("count", meter.getCount()).addField("fifteenMinuteRate", meter.getFifteenMinuteRate())
+
 					.addField("fiveMinuteRate", meter.getFiveMinuteRate())
 					.addField("oneMinuteRate", meter.getOneMinuteRate()).addField("meanRate", meter.getMeanRate())
 
 					// histogram fields
-					.addField("count", count).addField("percentile.75th", snapshot.get75thPercentile())
-					.addField("percentile.95th", snapshot.get95thPercentile())
-					.addField("percentile.98th", snapshot.get98thPercentile())
-					.addField("percentile.99th", snapshot.get99thPercentile())
-					.addField("percentile.999th", snapshot.get999thPercentile()).addField("max", snapshot.getMax())
-					.addField("mean", snapshot.getMean()).addField("median", snapshot.getMedian())
-					.addField("stddev", snapshot.getStdDev())
+					.addField("count", count).addField("percentile.75th", convertDuration(snapshot.get75thPercentile()))
+					.addField("percentile.95th", convertDuration(snapshot.get95thPercentile()))
+					.addField("percentile.98th", convertDuration(snapshot.get98thPercentile()))
+					.addField("percentile.99th", convertDuration(snapshot.get99thPercentile()))
+					.addField("percentile.999th", convertDuration(snapshot.get999thPercentile()))
+					.addField("max", convertDuration(snapshot.getMax()))
+					.addField("mean", convertDuration(snapshot.getMean()))
+					.addField("median", convertDuration(snapshot.getMedian()))
+					.addField("stddev", convertDuration(snapshot.getStdDev()))
 
 					.tag(nameAndTags.tags)
 
@@ -160,17 +180,24 @@ public class InfluxDbWriter {
 
 			batchPoints.point(Point.measurement(nameAndTags.name)
 					.time(System.currentTimeMillis(), TimeUnit.MILLISECONDS).addField("count", count)
-					.addField("percentile.75th", snapshot.get75thPercentile())
-					.addField("percentile.95th", snapshot.get95thPercentile())
-					.addField("percentile.98th", snapshot.get98thPercentile())
-					.addField("percentile.99th", snapshot.get99thPercentile())
-					.addField("percentile.999th", snapshot.get999thPercentile()).addField("max", snapshot.getMax())
-					.addField("mean", snapshot.getMean()).addField("median", snapshot.getMedian())
-					.addField("stddev", snapshot.getStdDev()).tag(nameAndTags.tags).build());
+					.addField("percentile.75th", convertDuration(snapshot.get75thPercentile()))
+					.addField("percentile.95th", convertDuration(snapshot.get95thPercentile()))
+					.addField("percentile.98th", convertDuration(snapshot.get98thPercentile()))
+					.addField("percentile.99th", convertDuration(snapshot.get99thPercentile()))
+					.addField("percentile.999th", convertDuration(snapshot.get999thPercentile()))
+					.addField("max", convertDuration(snapshot.getMax()))
+					.addField("mean", convertDuration(snapshot.getMean()))
+					.addField("median", convertDuration(snapshot.getMedian()))
+					.addField("stddev", convertDuration(snapshot.getStdDev())).tag(nameAndTags.tags).build());
 		});
 
 		System.out.println("writing!");
 		influxDB.write(batchPoints);
+	}
+
+	private static double convertDuration(double duration) {
+		final double factor = 1.0 * TimeUnit.MILLISECONDS.toNanos(1);
+		return duration / factor;
 	}
 
 }
