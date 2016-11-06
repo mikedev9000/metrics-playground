@@ -114,10 +114,10 @@ public class InfluxDbWriter {
 					.time(System.currentTimeMillis(), TimeUnit.MILLISECONDS).addField("count", count)
 
 					// meter fields
-					.addField("count", meter.getCount()).addField("fifteenMinuteRate", meter.getFifteenMinuteRate())
+					.addField("count", meter.getCount()).addField("rate.15m", meter.getFifteenMinuteRate())
 
-					.addField("fiveMinuteRate", meter.getFiveMinuteRate())
-					.addField("oneMinuteRate", meter.getOneMinuteRate()).addField("meanRate", meter.getMeanRate())
+					.addField("rate.5m", meter.getFiveMinuteRate()).addField("rate.1m", meter.getOneMinuteRate())
+					.addField("rate.mean", meter.getMeanRate())
 
 					// histogram fields
 					.addField("count", count).addField("percentile.75th", convertDuration(snapshot.get75thPercentile()))
@@ -152,9 +152,8 @@ public class InfluxDbWriter {
 
 			batchPoints.point(Point.measurement(nameAndTags.name)
 					.time(System.currentTimeMillis(), TimeUnit.MILLISECONDS).addField("count", meter.getCount())
-					.addField("fifteenMinuteRate", meter.getFifteenMinuteRate())
-					.addField("fiveMinuteRate", meter.getFiveMinuteRate())
-					.addField("oneMinuteRate", meter.getOneMinuteRate()).addField("meanRate", meter.getMeanRate())
+					.addField("rate.15m", meter.getFifteenMinuteRate()).addField("rate.5m", meter.getFiveMinuteRate())
+					.addField("rate.1m", meter.getOneMinuteRate()).addField("rate.mean", meter.getMeanRate())
 					.tag(nameAndTags.tags).build());
 		});
 
