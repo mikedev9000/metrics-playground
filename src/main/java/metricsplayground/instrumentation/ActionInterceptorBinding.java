@@ -6,11 +6,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.interceptor.InterceptorBinding;
+
 @Inherited
-@Target({ ElementType.METHOD })
+@InterceptorBinding
+@Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Action {
-
-	String value();
-
+public @interface ActionInterceptorBinding {
 }

@@ -5,15 +5,17 @@ import java.util.Random;
 import org.springframework.stereotype.Component;
 
 import metricsplayground.instrumentation.Action;
+import metricsplayground.instrumentation.ActionInterceptorBinding;
 import metricsplayground.instrumentation.Context;
 
 @Component
+@ActionInterceptorBinding
 public class ExampleAnnotatedService {
 
 	private final Random random = new Random(0);
 
 	@Action("convert")
-	public void convertThis(@Context("thing") String thing) {
+	public void convertThis(@Context(key = "thing") String thing) {
 		try {
 			Thread.sleep(50 + random.nextInt(5000));
 		} catch (InterruptedException e) {
@@ -27,7 +29,7 @@ public class ExampleAnnotatedService {
 	}
 
 	@Action("persist")
-	public void persistThis(@Context("thing") String thing) {
+	public void persistThis(@Context(key = "thing") String thing) {
 		try {
 			Thread.sleep(10 + random.nextInt(5000));
 		} catch (InterruptedException e) {
@@ -41,7 +43,7 @@ public class ExampleAnnotatedService {
 	}
 
 	@Action("find")
-	public void findThis(@Context("thing") String thing) {
+	public void findThis(@Context(key = "thing") String thing) {
 		try {
 			Thread.sleep(5 + random.nextInt(5000));
 		} catch (InterruptedException e) {

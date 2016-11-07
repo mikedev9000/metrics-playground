@@ -10,5 +10,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Context {
-	String value();
+	String key();
+
+	String valueExpression() default "it";
 }

@@ -12,7 +12,7 @@ public class DemoDriver {
 	private Random random = new Random(1);
 
 	@Autowired
-	ExampleInstrumentedService service;
+	ExampleAnnotatedService service;
 
 	private final String[] things = { "Person", "TimeMachine", "AirplaneSeat" };
 
